@@ -219,7 +219,6 @@
       box-shadow: 0 4px 10px rgba(0,0,0,.25);
     }
 
-    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 860px){
       :root{ --pad: 18px; }
       .wrap{ grid-template-columns:1fr; gap:16px; }
@@ -244,14 +243,6 @@
       .list{ max-height: 220px; }
       .centerLogo{ width: 96px; height: 96px; }
     }
-
-    @media (max-width: 380px){
-      :root{ --pad: 12px; }
-      .result{ padding:12px; }
-      .result .value{ font-size:17px; }
-      .list{ max-height: 190px; }
-      .centerLogo{ width: 88px; height: 88px; }
-    }
   </style>
 </head>
 <body>
@@ -261,7 +252,6 @@
         <div class="canvasBox">
           <div class="pointer"></div>
 
-          <!-- ВАЖНО: положи logo.png рядом с index.html (в dist/) -->
           <div class="centerLogo" aria-hidden="true">
             <img src="logo.png" alt="">
           </div>
@@ -300,7 +290,6 @@
 
 <script>
 (() => {
-  // --- темы (можешь редактировать) ---
   let topics = [
     "Онбординг (1 экран)",
     "Экран авторизации",
@@ -340,7 +329,7 @@
     "#FF4DD2","#FF4D8A"
   ];
 
-  const STORAGE_KEY = "uxui_wheel_daily_v2"; // новая версия, чтобы не конфликтовать со старой
+  const STORAGE_KEY = "uxui_wheel_daily_v2";
 
   const canvas = document.getElementById("wheel");
   const ctx = canvas.getContext("2d");
@@ -359,7 +348,14 @@
   let isSpinning = false;
   let raf = null;
 
-  // -------- date & storage --------
+  const TWO_PI = Math.PI * 2;
+
+  function norm(a){
+    a = a % TWO_PI;
+    if(a < 0) a += TWO_PI;
+    return a;
+  }
+
   function todayKey(){
     const d = new Date();
     const y = d.getFullYear();
@@ -401,7 +397,6 @@
     return idx;
   }
 
-  // тема дня (фиксируется на сутки)
   function ensureDailyPick(){
     const tKey = todayKey();
     let state = loadState();
@@ -421,13 +416,11 @@
     return { idx, state };
   }
 
-  // принудительно новая тема сегодня (без повторов в текущем цикле)
   function rerollToday(){
     const tKey = todayKey();
     let state = loadState();
     if(!state || !Array.isArray(state.remaining)) state = newCycleState();
 
-    // если уже была тема сегодня — вернём её в remaining, чтобы не "съедалась"
     if(state.lastDate === tKey && Number.isInteger(state.todayIndex)){
       if(!state.remaining.includes(state.todayIndex)){
         state.remaining.push(state.todayIndex);
@@ -445,7 +438,6 @@
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  // -------- draw wheel --------
   function renderList(){
     topicList.innerHTML = "";
     topics.forEach((t,i)=>{
@@ -479,7 +471,7 @@
     ctx.rotate(angle);
 
     const n = topics.length;
-    const arc = (Math.PI * 2) / n;
+    const arc = TWO_PI / n;
 
     for(let i=0;i<n;i++){
       ctx.beginPath();
@@ -526,35 +518,54 @@
     ctx.restore();
   }
 
-  // Поворот колеса так, чтобы "указатель" сверху смотрел в центр сегмента idx
+  // Указатель находится сверху (визуально он "вниз", но позиция всё равно сверху)
   function angleForIndex(idx){
     const n = topics.length;
-    const arc = (Math.PI * 2) / n;
-    const pointer = -Math.PI / 2; // указатель сверху
+    const arc = TWO_PI / n;
+    const pointer = -Math.PI / 2; // верхняя точка
     const center = (idx + 0.5) * arc;
     return pointer - center;
   }
 
-  function animateSpinToIndex(idx){
+  // Находим индекс сектора по текущему углу (для синхронизации)
+  function indexFromAngle(a){
+    const n = topics.length;
+    const arc = TWO_PI / n;
+
+    // Переносим "указатель" в координаты колеса:
+    // wheelAngleAtPointer = pointer - angle
+    const pointer = -Math.PI / 2;
+    const w = norm(pointer - a); // 0..2π
+
+    let idx = Math.floor(w / arc);
+    if(idx < 0) idx = 0;
+    if(idx > n-1) idx = n-1;
+    return idx;
+  }
+
+  function setButtonsEnabled(enabled){
+    spinBtn.disabled = !enabled;
+    rerollBtn.disabled = !enabled;
+    shuffleBtn.disabled = !enabled;
+    resetBtn.disabled = !enabled;
+  }
+
+  function animateSpinToIndex(targetIdx){
     if(isSpinning) return;
 
     isSpinning = true;
-    spinBtn.disabled = true;
-    rerollBtn.disabled = true;
-    shuffleBtn.disabled = true;
+    setButtonsEnabled(false);
 
-    resultText.textContent = topics[idx];
+    // ВАЖНО: текст НЕ меняем сразу
+    resultText.textContent = "Крутится…";
 
-    const base = angleForIndex(idx);
-    const two = Math.PI*2;
-
+    const base = angleForIndex(targetIdx);
     const spins = 6 + Math.random()*4; // 6–10 оборотов
-    let target = base;
 
-    // ensure forward spin
-    const current = angle;
-    while(target < current) target += two;
-    target += spins * two;
+    // делаем цель всегда "вперёд"
+    let target = base;
+    while(target < angle) target += TWO_PI;
+    target += spins * TWO_PI;
 
     const start = angle;
     const duration = 3600;
@@ -567,14 +578,22 @@
       const k = easeOutCubic(t);
       angle = start + (target - start) * k;
       draw();
+
       if(t < 1){
         raf = requestAnimationFrame(tick);
-      } else {
-        isSpinning = false;
-        spinBtn.disabled = false;
-        rerollBtn.disabled = false;
-        shuffleBtn.disabled = false;
+        return;
       }
+
+      // Финал: фиксируем угол РОВНО в сектор (без “рядом”)
+      angle = base;
+      draw();
+
+      // Финал: синхронизируем текст с реально попавшим сектором
+      const actualIdx = indexFromAngle(angle);
+      resultText.textContent = topics[actualIdx];
+
+      isSpinning = false;
+      setButtonsEnabled(true);
     };
 
     raf = requestAnimationFrame(tick);
@@ -586,7 +605,6 @@
   }
 
   function shuffleTopics(){
-    // Перемешивание ломает прогресс, поэтому начинаем новый цикл.
     topics.sort(()=>Math.random() - 0.5);
     clearProgress();
     renderList();
@@ -605,11 +623,11 @@
   // init
   renderList();
 
-  // показать тему дня сразу при открытии + поставить колесо на неё статично
   const { idx: initIdx } = ensureDailyPick();
-  resultText.textContent = topics[initIdx];
+  // Сразу ставим колесо на тему дня (без анимации) и синхронизируем текст
   angle = angleForIndex(initIdx);
   draw();
+  resultText.textContent = topics[indexFromAngle(angle)];
 
   // events
   spinBtn.addEventListener("click", spinToDaily);
