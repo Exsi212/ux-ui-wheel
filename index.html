@@ -73,7 +73,7 @@
       box-shadow: 0 18px 60px rgba(0,0,0,.55);
     }
 
-    /* pointer (NOW POINTS DOWN) */
+    /* pointer (points DOWN) */
     .pointer{
       position:absolute;
       top:-10px;
@@ -82,45 +82,46 @@
       width:0;height:0;
       border-left:14px solid transparent;
       border-right:14px solid transparent;
-      border-top:26px solid #ffd34d; /* flipped */
+      border-top:26px solid #ffd34d;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,.4));
-      z-index: 5;
+      z-index: 6;
     }
     .pointer::after{
       content:"";
       position:absolute;
-      left:-6px; top:-24px; /* moved to sit near base after flip */
+      left:-6px; top:-24px;
       width:12px; height:12px;
       border-radius:50%;
       background:#ffb300;
       box-shadow:0 4px 12px rgba(0,0,0,.35);
     }
 
-    /* CENTER LOGO OVERLAY */
+    /* center badge */
     .centerLogo{
       position:absolute;
       left:50%;
       top:50%;
       transform: translate(-50%, -50%);
-      width: 112px;
-      height: 112px;
+      width: 118px;
+      height: 118px;
       border-radius: 999px;
-      background: rgba(255,255,255,.80);
+
+      background: rgba(255,255,255,.90);
       border: 1px solid rgba(255,255,255,.35);
       box-shadow: 0 14px 40px rgba(0,0,0,.45);
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index: 4;
+      z-index: 5;
       pointer-events: none;
       backdrop-filter: blur(6px);
     }
     .centerLogo img{
-      width: 76%;
-      height: 76%;
-      object-fit: contain;
+      width: 78%;
+      height: 78%;
+      object-fit: contain; /* важно: без обрезки */
       display:block;
-      filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,.18));
     }
 
     .controls{
@@ -176,6 +177,15 @@
       line-height:1.35;
     }
 
+    .signature{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      line-height:1.35;
+    }
+
     .meta{
       color:var(--muted);
       font-size:14px;
@@ -209,7 +219,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,.25);
     }
 
-    /* RESPONSIVE */
+    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 860px){
       :root{ --pad: 18px; }
       .wrap{ grid-template-columns:1fr; gap:16px; }
@@ -232,7 +242,7 @@
       .result .value{ font-size:18px; }
       .chip{ font-size:13px; }
       .list{ max-height: 220px; }
-      .centerLogo{ width: 92px; height: 92px; }
+      .centerLogo{ width: 96px; height: 96px; }
     }
 
     @media (max-width: 380px){
@@ -240,7 +250,7 @@
       .result{ padding:12px; }
       .result .value{ font-size:17px; }
       .list{ max-height: 190px; }
-      .centerLogo{ width: 84px; height: 84px; }
+      .centerLogo{ width: 88px; height: 88px; }
     }
   </style>
 </head>
@@ -251,7 +261,7 @@
         <div class="canvasBox">
           <div class="pointer"></div>
 
-          <!-- Put your logo as dist/logo.png -->
+          <!-- ВАЖНО: положи logo.png рядом с index.html (в dist/) -->
           <div class="centerLogo" aria-hidden="true">
             <img src="logo.png" alt="">
           </div>
@@ -262,8 +272,9 @@
 
       <div class="controls">
         <button id="spinBtn">Крутить 🎡</button>
+        <button id="rerollBtn" class="secondary">Новая тема сегодня</button>
         <button id="shuffleBtn" class="secondary">Перемешать темы</button>
-        <button id="resetBtn" class="secondary">Сброс (очистить прогресс)</button>
+        <button id="resetBtn" class="secondary">Сброс (очистить progress)</button>
       </div>
 
       <div class="result">
@@ -272,7 +283,11 @@
       </div>
 
       <div class="hint">
-        «Крутить» всегда останавливает колесо на теме дня. Тема меняется автоматически раз в календарный день и не повторяется, пока не пройдут все темы.
+        «Крутить» показывает текущую тему дня (она фиксируется на сутки). «Новая тема сегодня» меняет тему прямо сейчас (без повторов в цикле).
+      </div>
+
+      <div class="signature">
+        Made by Olga Aleshina × заметки дизпрогера 2026
       </div>
     </div>
 
@@ -285,6 +300,7 @@
 
 <script>
 (() => {
+  // --- темы (можешь редактировать) ---
   let topics = [
     "Онбординг (1 экран)",
     "Экран авторизации",
@@ -324,11 +340,12 @@
     "#FF4DD2","#FF4D8A"
   ];
 
-  const STORAGE_KEY = "uxui_wheel_daily_v1";
+  const STORAGE_KEY = "uxui_wheel_daily_v2"; // новая версия, чтобы не конфликтовать со старой
 
   const canvas = document.getElementById("wheel");
   const ctx = canvas.getContext("2d");
   const spinBtn = document.getElementById("spinBtn");
+  const rerollBtn = document.getElementById("rerollBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
   const resetBtn = document.getElementById("resetBtn");
   const resultText = document.getElementById("resultText");
@@ -342,6 +359,7 @@
   let isSpinning = false;
   let raf = null;
 
+  // -------- date & storage --------
   function todayKey(){
     const d = new Date();
     const y = d.getFullYear();
@@ -383,6 +401,7 @@
     return idx;
   }
 
+  // тема дня (фиксируется на сутки)
   function ensureDailyPick(){
     const tKey = todayKey();
     let state = loadState();
@@ -402,10 +421,31 @@
     return { idx, state };
   }
 
+  // принудительно новая тема сегодня (без повторов в текущем цикле)
+  function rerollToday(){
+    const tKey = todayKey();
+    let state = loadState();
+    if(!state || !Array.isArray(state.remaining)) state = newCycleState();
+
+    // если уже была тема сегодня — вернём её в remaining, чтобы не "съедалась"
+    if(state.lastDate === tKey && Number.isInteger(state.todayIndex)){
+      if(!state.remaining.includes(state.todayIndex)){
+        state.remaining.push(state.todayIndex);
+      }
+    }
+
+    const idx = pickFromRemaining(state);
+    state.lastDate = tKey;
+    state.todayIndex = idx;
+    saveState(state);
+    return idx;
+  }
+
   function clearProgress(){
     localStorage.removeItem(STORAGE_KEY);
   }
 
+  // -------- draw wheel --------
   function renderList(){
     topicList.innerHTML = "";
     topics.forEach((t,i)=>{
@@ -457,7 +497,7 @@
       ctx.save();
       ctx.rotate(mid);
 
-      ctx.fillStyle="rgba(0,0,0,.80)";
+      ctx.fillStyle="rgba(0,0,0,.82)";
       ctx.font="bold 26px Inter, system-ui, sans-serif";
       ctx.textAlign="right";
       ctx.textBaseline="middle";
@@ -486,29 +526,32 @@
     ctx.restore();
   }
 
+  // Поворот колеса так, чтобы "указатель" сверху смотрел в центр сегмента idx
   function angleForIndex(idx){
     const n = topics.length;
     const arc = (Math.PI * 2) / n;
-    const pointer = -Math.PI / 2; // pointer is still at top
+    const pointer = -Math.PI / 2; // указатель сверху
     const center = (idx + 0.5) * arc;
     return pointer - center;
   }
 
-  function spinToDaily(){
+  function animateSpinToIndex(idx){
     if(isSpinning) return;
+
     isSpinning = true;
     spinBtn.disabled = true;
+    rerollBtn.disabled = true;
     shuffleBtn.disabled = true;
 
-    const { idx } = ensureDailyPick();
     resultText.textContent = topics[idx];
 
     const base = angleForIndex(idx);
     const two = Math.PI*2;
 
-    const spins = 6 + Math.random()*4;
+    const spins = 6 + Math.random()*4; // 6–10 оборотов
     let target = base;
 
+    // ensure forward spin
     const current = angle;
     while(target < current) target += two;
     target += spins * two;
@@ -529,6 +572,7 @@
       } else {
         isSpinning = false;
         spinBtn.disabled = false;
+        rerollBtn.disabled = false;
         shuffleBtn.disabled = false;
       }
     };
@@ -536,7 +580,13 @@
     raf = requestAnimationFrame(tick);
   }
 
+  function spinToDaily(){
+    const { idx } = ensureDailyPick();
+    animateSpinToIndex(idx);
+  }
+
   function shuffleTopics(){
+    // Перемешивание ломает прогресс, поэтому начинаем новый цикл.
     topics.sort(()=>Math.random() - 0.5);
     clearProgress();
     renderList();
@@ -554,12 +604,21 @@
 
   // init
   renderList();
-  const { idx } = ensureDailyPick();
-  resultText.textContent = topics[idx];
-  angle = angleForIndex(idx);
+
+  // показать тему дня сразу при открытии + поставить колесо на неё статично
+  const { idx: initIdx } = ensureDailyPick();
+  resultText.textContent = topics[initIdx];
+  angle = angleForIndex(initIdx);
   draw();
 
+  // events
   spinBtn.addEventListener("click", spinToDaily);
+
+  rerollBtn.addEventListener("click", () => {
+    const idx = rerollToday();
+    animateSpinToIndex(idx);
+  });
+
   shuffleBtn.addEventListener("click", shuffleTopics);
   resetBtn.addEventListener("click", resetAll);
 })();
