@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UX/UI Wheel — 30 тем</title>
+  <style>
+    :root{
+      --bg:#0f0f14;
+      --text:#ffffff;
+      --muted:rgba(255,255,255,.72);
+      --ring:#2a2a3a;
+      --accent:#7c5cff;
+      --accent2:#5a3cff;
+
+      --pad: 24px;
+      --card-pad: 18px;
+      --radius: 20px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(1200px 700px at 50% 0%, #1a1a2a 0%, var(--bg) 60%);
+      color:var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      padding: var(--pad);
+    }
+
+    .wrap{
+      width:min(1040px, 100%);
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:24px;
+      align-items:start;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 70px rgba(0,0,0,.45);
+      padding: var(--card-pad);
+      overflow:hidden;
+    }
+
+    .wheelArea{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      padding:14px;
+    }
+
+    .canvasBox{
+      width:min(520px, 100%);
+      aspect-ratio:1/1;
+      position:relative;
+    }
+
+    canvas{
+      width:100%;
+      height:100%;
+      display:block;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border:10px solid var(--ring);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+    }
+
+    /* pointer (NOW POINTS DOWN) */
+    .pointer{
+      position:absolute;
+      top:-10px;
+      left:50%;
+      transform: translateX(-50%);
+      width:0;height:0;
+      border-left:14px solid transparent;
+      border-right:14px solid transparent;
+      border-top:26px solid #ffd34d; /* flipped */
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.4));
+      z-index: 5;
+    }
+    .pointer::after{
+      content:"";
+      position:absolute;
+      left:-6px; top:-24px; /* moved to sit near base after flip */
+      width:12px; height:12px;
+      border-radius:50%;
+      background:#ffb300;
+      box-shadow:0 4px 12px rgba(0,0,0,.35);
+    }
+
+    /* CENTER LOGO OVERLAY */
+    .centerLogo{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: 112px;
+      height: 112px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.80);
+      border: 1px solid rgba(255,255,255,.35);
+      box-shadow: 0 14px 40px rgba(0,0,0,.45);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index: 4;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+    }
+    .centerLogo img{
+      width: 76%;
+      height: 76%;
+      object-fit: contain;
+      display:block;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-start;
+      margin-top: 6px;
+    }
+    button{
+      border:0;
+      cursor:pointer;
+      padding:12px 16px;
+      border-radius:14px;
+      font-weight:700;
+      color:white;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 12px 28px rgba(124,92,255,.28);
+      transition: transform .12s ease, opacity .12s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px); }
+    button:hover{ opacity:.92; }
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+    .secondary{
+      background: transparent;
+      border:1px solid rgba(255,255,255,.16);
+      color: var(--text);
+      box-shadow:none;
+      font-weight:600;
+    }
+
+    .result{
+      margin-top:14px;
+      padding:14px;
+      border-radius:16px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .result .label{color:var(--muted); font-size:13px; margin-bottom:6px;}
+    .result .value{font-size:20px; font-weight:800; line-height:1.2;}
+
+    .hint{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .meta{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.4;
+      margin-top:10px;
+    }
+
+    .list{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+      max-height: 320px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .chip{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      font-size:14px;
+      line-height:1.25;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      flex:0 0 auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,.25);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 860px){
+      :root{ --pad: 18px; }
+      .wrap{ grid-template-columns:1fr; gap:16px; }
+      .wheelArea{ padding: 10px; }
+      .list{ max-height: 280px; }
+    }
+
+    @media (max-width: 520px){
+      :root{ --pad: 14px; --card-pad: 14px; }
+      canvas{ border-width:8px; }
+      .pointer{
+        top:-8px;
+        border-left-width:12px;
+        border-right-width:12px;
+        border-top-width:22px;
+      }
+      .pointer::after{ top:-20px; }
+      .controls{ flex-direction:column; align-items:stretch; }
+      .controls button{ width:100%; justify-content:center; }
+      .result .value{ font-size:18px; }
+      .chip{ font-size:13px; }
+      .list{ max-height: 220px; }
+      .centerLogo{ width: 92px; height: 92px; }
+    }
+
+    @media (max-width: 380px){
+      :root{ --pad: 12px; }
+      .result{ padding:12px; }
+      .result .value{ font-size:17px; }
+      .list{ max-height: 190px; }
+      .centerLogo{ width: 84px; height: 84px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="wheelArea">
+        <div class="canvasBox">
+          <div class="pointer"></div>
+
+          <!-- Put your logo as dist/logo.png -->
+          <div class="centerLogo" aria-hidden="true">
+            <img src="logo.png" alt="">
+          </div>
+
+          <canvas id="wheel" width="900" height="900" aria-label="Колесо тем"></canvas>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="spinBtn">Крутить 🎡</button>
+        <button id="shuffleBtn" class="secondary">Перемешать темы</button>
+        <button id="resetBtn" class="secondary">Сброс (очистить прогресс)</button>
+      </div>
+
+      <div class="result">
+        <div class="label">Тема дня</div>
+        <div class="value" id="resultText">—</div>
+      </div>
+
+      <div class="hint">
+        «Крутить» всегда останавливает колесо на теме дня. Тема меняется автоматически раз в календарный день и не повторяется, пока не пройдут все темы.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px; font-size:18px;">30 тем для UX/UI “1 экран в день”</h2>
+      <div class="meta">Можешь менять список тем — колесо автоматически перерисуется.</div>
+      <div class="list" id="topicList"></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  let topics = [
+    "Онбординг (1 экран)",
+    "Экран авторизации",
+    "Пустое состояние",
+    "Экран ошибки",
+    "Экран успеха",
+    "Профиль пользователя",
+    "Настройки аккаунта",
+    "Платёж / checkout",
+    "Экран подписки",
+    "Карточка товара",
+    "Каталог / список",
+    "Поиск + результаты",
+    "Фильтры",
+    "Уведомления",
+    "Чат / сообщения",
+    "Экран загрузки",
+    "Dashboard / аналитика",
+    "Экран достижений",
+    "Цели / прогресс",
+    "Экран обучения",
+    "Экран бронирования",
+    "Экран доставки",
+    "Экран отзывов",
+    "Экран поддержки",
+    "Экран сравнения",
+    "Экран избранного",
+    "Экран персонализации",
+    "Welcome back",
+    "Upsell / cross-sell",
+    "Goodbye экран"
+  ];
+
+  const colors = [
+    "#FF4D4D","#FF8A00","#FFD84D","#B6FF4D","#4DFF88",
+    "#4DFFD8","#4DD2FF","#4D7DFF","#7C5CFF","#B84DFF",
+    "#FF4DD2","#FF4D8A"
+  ];
+
+  const STORAGE_KEY = "uxui_wheel_daily_v1";
+
+  const canvas = document.getElementById("wheel");
+  const ctx = canvas.getContext("2d");
+  const spinBtn = document.getElementById("spinBtn");
+  const shuffleBtn = document.getElementById("shuffleBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const resultText = document.getElementById("resultText");
+  const topicList = document.getElementById("topicList");
+
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  const radius = Math.min(W,H)/2 - 18;
+
+  let angle = 0;
+  let isSpinning = false;
+  let raf = null;
+
+  function todayKey(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function saveState(state){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function newCycleState(){
+    return {
+      cycleId: Date.now(),
+      remaining: Array.from({length: topics.length}, (_, i) => i),
+      lastDate: null,
+      todayIndex: null
+    };
+  }
+
+  function pickFromRemaining(state){
+    if(!Array.isArray(state.remaining) || state.remaining.length === 0){
+      state.remaining = Array.from({length: topics.length}, (_, i) => i);
+      state.cycleId = Date.now();
+    }
+    const r = Math.floor(Math.random() * state.remaining.length);
+    const idx = state.remaining[r];
+    state.remaining.splice(r, 1);
+    return idx;
+  }
+
+  function ensureDailyPick(){
+    const tKey = todayKey();
+    let state = loadState();
+
+    if(!state || !Array.isArray(state.remaining) || state.remaining.length > topics.length){
+      state = newCycleState();
+    }
+
+    if(state.lastDate === tKey && Number.isInteger(state.todayIndex)){
+      return { idx: state.todayIndex, state };
+    }
+
+    const idx = pickFromRemaining(state);
+    state.lastDate = tKey;
+    state.todayIndex = idx;
+    saveState(state);
+    return { idx, state };
+  }
+
+  function clearProgress(){
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function renderList(){
+    topicList.innerHTML = "";
+    topics.forEach((t,i)=>{
+      const row = document.createElement("div");
+      row.className = "chip";
+
+      const dot = document.createElement("div");
+      dot.className = "dot";
+      dot.style.background = colors[i % colors.length];
+
+      const text = document.createElement("div");
+      text.textContent = `${i+1}. ${t}`;
+
+      row.appendChild(dot);
+      row.appendChild(text);
+      topicList.appendChild(row);
+    });
+  }
+
+  function splitToTwoLines(text, maxChars){
+    if(text.length <= maxChars) return [text];
+    const idx = text.lastIndexOf(" ", maxChars);
+    if(idx > 8) return [text.slice(0, idx), text.slice(idx+1)];
+    return [text.slice(0, maxChars), text.slice(maxChars)];
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(angle);
+
+    const n = topics.length;
+    const arc = (Math.PI * 2) / n;
+
+    for(let i=0;i<n;i++){
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.arc(0,0,radius,i*arc,(i+1)*arc);
+      ctx.closePath();
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255,255,255,.20)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const mid = i*arc + arc/2;
+      ctx.save();
+      ctx.rotate(mid);
+
+      ctx.fillStyle="rgba(0,0,0,.80)";
+      ctx.font="bold 26px Inter, system-ui, sans-serif";
+      ctx.textAlign="right";
+      ctx.textBaseline="middle";
+      ctx.strokeStyle="rgba(255,255,255,.35)";
+      ctx.lineWidth=6;
+      ctx.lineJoin="round";
+
+      const label = topics[i];
+      const short = label.length > 34 ? (label.slice(0, 33) + "…") : label;
+      const parts = splitToTwoLines(short, 20);
+      const rText = radius - 42;
+
+      if(parts.length === 1){
+        ctx.strokeText(parts[0], rText, 0);
+        ctx.fillText(parts[0], rText, 0);
+      } else {
+        ctx.strokeText(parts[0], rText, -16);
+        ctx.fillText(parts[0], rText, -16);
+        ctx.strokeText(parts[1], rText, 16);
+        ctx.fillText(parts[1], rText, 16);
+      }
+
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function angleForIndex(idx){
+    const n = topics.length;
+    const arc = (Math.PI * 2) / n;
+    const pointer = -Math.PI / 2; // pointer is still at top
+    const center = (idx + 0.5) * arc;
+    return pointer - center;
+  }
+
+  function spinToDaily(){
+    if(isSpinning) return;
+    isSpinning = true;
+    spinBtn.disabled = true;
+    shuffleBtn.disabled = true;
+
+    const { idx } = ensureDailyPick();
+    resultText.textContent = topics[idx];
+
+    const base = angleForIndex(idx);
+    const two = Math.PI*2;
+
+    const spins = 6 + Math.random()*4;
+    let target = base;
+
+    const current = angle;
+    while(target < current) target += two;
+    target += spins * two;
+
+    const start = angle;
+    const duration = 3600;
+    const startTime = performance.now();
+
+    function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+    const tick = (now) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const k = easeOutCubic(t);
+      angle = start + (target - start) * k;
+      draw();
+      if(t < 1){
+        raf = requestAnimationFrame(tick);
+      } else {
+        isSpinning = false;
+        spinBtn.disabled = false;
+        shuffleBtn.disabled = false;
+      }
+    };
+
+    raf = requestAnimationFrame(tick);
+  }
+
+  function shuffleTopics(){
+    topics.sort(()=>Math.random() - 0.5);
+    clearProgress();
+    renderList();
+    resultText.textContent = "—";
+    angle = 0;
+    draw();
+  }
+
+  function resetAll(){
+    clearProgress();
+    angle = 0;
+    resultText.textContent = "—";
+    draw();
+  }
+
+  // init
+  renderList();
+  const { idx } = ensureDailyPick();
+  resultText.textContent = topics[idx];
+  angle = angleForIndex(idx);
+  draw();
+
+  spinBtn.addEventListener("click", spinToDaily);
+  shuffleBtn.addEventListener("click", shuffleTopics);
+  resetBtn.addEventListener("click", resetAll);
+})();
+</script>
+</body>
+</html>
