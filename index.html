@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>UX/UI Wheel — 30 тем</title>
+  <title>UX/UI Wheel — темы</title>
   <style>
     :root{
       --bg:#0f0f14;
@@ -20,20 +20,23 @@
 
     *{box-sizing:border-box}
     html,body{height:100%}
+
+    /* ✅ фикс мобилки: нормальный скролл, без обрезки */
     body{
       margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      min-height:100dvh;
       background: radial-gradient(1200px 700px at 50% 0%, #1a1a2a 0%, var(--bg) 60%);
       color:var(--text);
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       padding: var(--pad);
+      display:block;
+      overflow-x:hidden;
+      overflow-y:auto;
     }
 
     .wrap{
       width:min(1040px, 100%);
+      margin: 0 auto;
       display:grid;
       grid-template-columns: 1.1fr .9fr;
       gap:24px;
@@ -57,8 +60,9 @@
       padding:14px;
     }
 
+    /* ✅ колесо всегда влезает */
     .canvasBox{
-      width:min(520px, 100%);
+      width: clamp(280px, 92vw, 520px);
       aspect-ratio:1/1;
       position:relative;
     }
@@ -119,7 +123,7 @@
     .centerLogo img{
       width: 78%;
       height: 78%;
-      object-fit: contain; /* важно: без обрезки */
+      object-fit: contain; /* без обрезки */
       display:block;
       filter: drop-shadow(0 6px 14px rgba(0,0,0,.18));
     }
@@ -144,6 +148,7 @@
       transition: transform .12s ease, opacity .12s ease;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
     }
     button:active{ transform: translateY(1px); }
     button:hover{ opacity:.92; }
@@ -202,6 +207,7 @@
       overflow:auto;
       padding-right:6px;
     }
+
     .chip{
       display:flex;
       align-items:center;
@@ -213,12 +219,61 @@
       font-size:14px;
       line-height:1.25;
     }
+
     .dot{
       width:10px;height:10px;border-radius:50%;
       flex:0 0 auto;
       box-shadow: 0 4px 10px rgba(0,0,0,.25);
     }
 
+    .chipText{ flex: 1 1 auto; min-width: 0; }
+    .chipActions{ display:flex; gap:8px; flex: 0 0 auto; }
+
+    .iconBtn{
+      padding:8px 10px;
+      border-radius:12px;
+      font-weight:800;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.85);
+      box-shadow:none;
+    }
+    .iconBtn:hover{ opacity:1; background: rgba(255,255,255,.09); }
+
+    /* --- editor --- */
+    .editor{
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      display:grid;
+      gap:10px;
+    }
+    .editorRow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    input[type="text"]{
+      width:100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    input[type="text"]::placeholder{ color: rgba(255,255,255,.45); }
+    .editorNote{
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 860px){
       :root{ --pad: 18px; }
       .wrap{ grid-template-columns:1fr; gap:16px; }
@@ -227,8 +282,8 @@
     }
 
     @media (max-width: 520px){
-      :root{ --pad: 14px; --card-pad: 14px; }
-      canvas{ border-width:8px; }
+      :root{ --pad: 12px; --card-pad: 12px; }
+      canvas{ border-width:7px; }
       .pointer{
         top:-8px;
         border-left-width:12px;
@@ -241,7 +296,8 @@
       .result .value{ font-size:18px; }
       .chip{ font-size:13px; }
       .list{ max-height: 220px; }
-      .centerLogo{ width: 96px; height: 96px; }
+      .centerLogo{ width: 84px; height: 84px; }
+      .editorRow{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -252,6 +308,7 @@
         <div class="canvasBox">
           <div class="pointer"></div>
 
+          <!-- logo.png лежит рядом с index.html -->
           <div class="centerLogo" aria-hidden="true">
             <img src="logo.png" alt="">
           </div>
@@ -273,7 +330,7 @@
       </div>
 
       <div class="hint">
-        «Крутить» показывает текущую тему дня (она фиксируется на сутки). «Новая тема сегодня» меняет тему прямо сейчас (без повторов в цикле).
+        «Крутить» показывает текущую тему дня (фиксируется на сутки). «Новая тема сегодня» меняет тему прямо сейчас (без повторов в цикле).
       </div>
 
       <div class="signature">
@@ -282,15 +339,31 @@
     </div>
 
     <div class="card">
-      <h2 style="margin:0 0 6px; font-size:18px;">30 тем для UX/UI “1 экран в день”</h2>
-      <div class="meta">Можешь менять список тем — колесо автоматически перерисуется.</div>
+      <h2 style="margin:0 0 6px; font-size:18px;">Темы</h2>
+      <div class="meta">Добавляй свои темы — они сохраняются в браузере и сразу появляются на колесе.</div>
+
+      <div class="editor">
+        <div class="editorRow">
+          <input id="topicInput" type="text" placeholder="Например: Экран регистрации / Экран тарифов / Экран расписания" maxlength="60" />
+          <button id="addTopicBtn">Добавить тему</button>
+        </div>
+        <div class="controls" style="margin-top:0">
+          <button id="resetTopicsBtn" class="secondary">Вернуть темы по умолчанию</button>
+        </div>
+        <div class="editorNote">
+          • Ограничение: до 60 символов. <br>
+          • Чтобы удалить тему — нажми ✕ в списке.
+        </div>
+      </div>
+
       <div class="list" id="topicList"></div>
     </div>
   </div>
 
 <script>
 (() => {
-  let topics = [
+  // ---------- Defaults ----------
+  const DEFAULT_TOPICS = [
     "Онбординг (1 экран)",
     "Экран авторизации",
     "Пустое состояние",
@@ -323,33 +396,44 @@
     "Goodbye экран"
   ];
 
-  const colors = [
+  const COLORS = [
     "#FF4D4D","#FF8A00","#FFD84D","#B6FF4D","#4DFF88",
     "#4DFFD8","#4DD2FF","#4D7DFF","#7C5CFF","#B84DFF",
     "#FF4DD2","#FF4D8A"
   ];
 
-  const STORAGE_KEY = "uxui_wheel_daily_v2";
+  // ---------- Storage keys ----------
+  const TOPICS_KEY  = "uxui_topics_v1";
+  const STATE_KEY   = "uxui_wheel_daily_v3"; // новая версия состояния (чтобы обновления не ломали старое)
 
+  // ---------- DOM ----------
   const canvas = document.getElementById("wheel");
   const ctx = canvas.getContext("2d");
+
   const spinBtn = document.getElementById("spinBtn");
   const rerollBtn = document.getElementById("rerollBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
   const resetBtn = document.getElementById("resetBtn");
+
   const resultText = document.getElementById("resultText");
   const topicList = document.getElementById("topicList");
 
+  const topicInput = document.getElementById("topicInput");
+  const addTopicBtn = document.getElementById("addTopicBtn");
+  const resetTopicsBtn = document.getElementById("resetTopicsBtn");
+
+  // ---------- Geometry ----------
   const W = canvas.width, H = canvas.height;
   const cx = W/2, cy = H/2;
   const radius = Math.min(W,H)/2 - 18;
 
-  let angle = 0;
-  let isSpinning = false;
-  let raf = null;
-
   const TWO_PI = Math.PI * 2;
 
+  let topics = loadTopics();  // <— из localStorage или default
+  let angle = 0;
+  let isSpinning = false;
+
+  // ---------- Helpers ----------
   function norm(a){
     a = a % TWO_PI;
     if(a < 0) a += TWO_PI;
@@ -364,17 +448,37 @@
     return `${y}-${m}-${day}`;
   }
 
+  function loadTopics(){
+    try{
+      const raw = localStorage.getItem(TOPICS_KEY);
+      if(!raw) return [...DEFAULT_TOPICS];
+      const parsed = JSON.parse(raw);
+      if(!Array.isArray(parsed) || parsed.length < 2) return [...DEFAULT_TOPICS];
+      return parsed.map(s => String(s).trim()).filter(Boolean);
+    }catch(e){
+      return [...DEFAULT_TOPICS];
+    }
+  }
+
+  function saveTopics(list){
+    localStorage.setItem(TOPICS_KEY, JSON.stringify(list));
+  }
+
+  function clearProgress(){
+    localStorage.removeItem(STATE_KEY);
+  }
+
   function loadState(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STATE_KEY);
       return raw ? JSON.parse(raw) : null;
-    } catch(e){
+    }catch(e){
       return null;
     }
   }
 
   function saveState(state){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
   }
 
   function newCycleState(){
@@ -382,8 +486,14 @@
       cycleId: Date.now(),
       remaining: Array.from({length: topics.length}, (_, i) => i),
       lastDate: null,
-      todayIndex: null
+      todayIndex: null,
+      topicsHash: hashTopics(topics)
     };
+  }
+
+  function hashTopics(list){
+    // лёгкий “хэш” для проверки изменений списка
+    return list.join("||");
   }
 
   function pickFromRemaining(state){
@@ -401,17 +511,21 @@
     const tKey = todayKey();
     let state = loadState();
 
-    if(!state || !Array.isArray(state.remaining) || state.remaining.length > topics.length){
+    // если темы изменились — сброс цикла
+    const currentHash = hashTopics(topics);
+    if(!state || state.topicsHash !== currentHash){
       state = newCycleState();
     }
 
-    if(state.lastDate === tKey && Number.isInteger(state.todayIndex)){
+    // если на сегодня уже есть тема и индекс валиден
+    if(state.lastDate === tKey && Number.isInteger(state.todayIndex) && state.todayIndex >= 0 && state.todayIndex < topics.length){
       return { idx: state.todayIndex, state };
     }
 
     const idx = pickFromRemaining(state);
     state.lastDate = tKey;
     state.todayIndex = idx;
+    state.topicsHash = currentHash;
     saveState(state);
     return { idx, state };
   }
@@ -419,9 +533,13 @@
   function rerollToday(){
     const tKey = todayKey();
     let state = loadState();
-    if(!state || !Array.isArray(state.remaining)) state = newCycleState();
+    const currentHash = hashTopics(topics);
 
-    if(state.lastDate === tKey && Number.isInteger(state.todayIndex)){
+    if(!state || state.topicsHash !== currentHash){
+      state = newCycleState();
+    }
+
+    if(state.lastDate === tKey && Number.isInteger(state.todayIndex) && state.todayIndex >= 0 && state.todayIndex < topics.length){
       if(!state.remaining.includes(state.todayIndex)){
         state.remaining.push(state.todayIndex);
       }
@@ -430,33 +548,12 @@
     const idx = pickFromRemaining(state);
     state.lastDate = tKey;
     state.todayIndex = idx;
+    state.topicsHash = currentHash;
     saveState(state);
     return idx;
   }
 
-  function clearProgress(){
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  function renderList(){
-    topicList.innerHTML = "";
-    topics.forEach((t,i)=>{
-      const row = document.createElement("div");
-      row.className = "chip";
-
-      const dot = document.createElement("div");
-      dot.className = "dot";
-      dot.style.background = colors[i % colors.length];
-
-      const text = document.createElement("div");
-      text.textContent = `${i+1}. ${t}`;
-
-      row.appendChild(dot);
-      row.appendChild(text);
-      topicList.appendChild(row);
-    });
-  }
-
+  // ---------- Drawing ----------
   function splitToTwoLines(text, maxChars){
     if(text.length <= maxChars) return [text];
     const idx = text.lastIndexOf(" ", maxChars);
@@ -478,7 +575,7 @@
       ctx.moveTo(0,0);
       ctx.arc(0,0,radius,i*arc,(i+1)*arc);
       ctx.closePath();
-      ctx.fillStyle = colors[i % colors.length];
+      ctx.fillStyle = COLORS[i % COLORS.length];
       ctx.fill();
 
       ctx.strokeStyle = "rgba(255,255,255,.20)";
@@ -497,7 +594,7 @@
       ctx.lineWidth=6;
       ctx.lineJoin="round";
 
-      const label = topics[i];
+      const label = topics[i] ?? "";
       const short = label.length > 34 ? (label.slice(0, 33) + "…") : label;
       const parts = splitToTwoLines(short, 20);
       const rText = radius - 42;
@@ -518,25 +615,21 @@
     ctx.restore();
   }
 
-  // Указатель находится сверху (визуально он "вниз", но позиция всё равно сверху)
+  // pointer stays at top
   function angleForIndex(idx){
     const n = topics.length;
     const arc = TWO_PI / n;
-    const pointer = -Math.PI / 2; // верхняя точка
+    const pointer = -Math.PI / 2;
     const center = (idx + 0.5) * arc;
     return pointer - center;
   }
 
-  // Находим индекс сектора по текущему углу (для синхронизации)
   function indexFromAngle(a){
     const n = topics.length;
     const arc = TWO_PI / n;
-
-    // Переносим "указатель" в координаты колеса:
-    // wheelAngleAtPointer = pointer - angle
     const pointer = -Math.PI / 2;
-    const w = norm(pointer - a); // 0..2π
 
+    const w = norm(pointer - a);
     let idx = Math.floor(w / arc);
     if(idx < 0) idx = 0;
     if(idx > n-1) idx = n-1;
@@ -548,6 +641,8 @@
     rerollBtn.disabled = !enabled;
     shuffleBtn.disabled = !enabled;
     resetBtn.disabled = !enabled;
+    addTopicBtn.disabled = !enabled;
+    resetTopicsBtn.disabled = !enabled;
   }
 
   function animateSpinToIndex(targetIdx){
@@ -556,13 +651,12 @@
     isSpinning = true;
     setButtonsEnabled(false);
 
-    // ВАЖНО: текст НЕ меняем сразу
+    // ✅ не показываем тему раньше окончания вращения
     resultText.textContent = "Крутится…";
 
     const base = angleForIndex(targetIdx);
-    const spins = 6 + Math.random()*4; // 6–10 оборотов
+    const spins = 6 + Math.random()*4;
 
-    // делаем цель всегда "вперёд"
     let target = base;
     while(target < angle) target += TWO_PI;
     target += spins * TWO_PI;
@@ -580,65 +674,141 @@
       draw();
 
       if(t < 1){
-        raf = requestAnimationFrame(tick);
+        requestAnimationFrame(tick);
         return;
       }
 
-      // Финал: фиксируем угол РОВНО в сектор (без “рядом”)
+      // ✅ финал: фиксируем ровно в сектор
       angle = base;
       draw();
 
-      // Финал: синхронизируем текст с реально попавшим сектором
+      // ✅ синхронизация текста с фактическим сектором
       const actualIdx = indexFromAngle(angle);
-      resultText.textContent = topics[actualIdx];
+      resultText.textContent = topics[actualIdx] ?? "—";
 
       isSpinning = false;
       setButtonsEnabled(true);
     };
 
-    raf = requestAnimationFrame(tick);
+    requestAnimationFrame(tick);
   }
 
+  // ---------- Topic list UI ----------
+  function renderList(){
+    topicList.innerHTML = "";
+    topics.forEach((t,i)=>{
+      const row = document.createElement("div");
+      row.className = "chip";
+
+      const dot = document.createElement("div");
+      dot.className = "dot";
+      dot.style.background = COLORS[i % COLORS.length];
+
+      const text = document.createElement("div");
+      text.className = "chipText";
+      text.textContent = `${i+1}. ${t}`;
+
+      const actions = document.createElement("div");
+      actions.className = "chipActions";
+
+      const del = document.createElement("button");
+      del.className = "iconBtn";
+      del.type = "button";
+      del.textContent = "✕";
+      del.title = "Удалить тему";
+      del.addEventListener("click", () => {
+        // не даём удалить до 2 тем (иначе колесо бессмысленно)
+        if(topics.length <= 2){
+          alert("Нужно минимум 2 темы 🙂");
+          return;
+        }
+        topics.splice(i,1);
+        saveTopics(topics);
+        onTopicsChanged();
+      });
+
+      actions.appendChild(del);
+
+      row.appendChild(dot);
+      row.appendChild(text);
+      row.appendChild(actions);
+      topicList.appendChild(row);
+    });
+  }
+
+  function onTopicsChanged(){
+    // при изменении списка тем сбрасываем прогресс, чтобы не было несостыковок индексов
+    clearProgress();
+    renderList();
+    // ставим колесо на тему дня нового списка
+    const { idx } = ensureDailyPick();
+    angle = angleForIndex(idx);
+    draw();
+    resultText.textContent = topics[indexFromAngle(angle)] ?? "—";
+  }
+
+  function addTopicFromInput(){
+    const raw = (topicInput.value || "").trim();
+    if(!raw) return;
+
+    // убираем двойные пробелы
+    const cleaned = raw.replace(/\s+/g, " ");
+
+    // не добавляем дубликаты
+    if(topics.some(t => t.toLowerCase() === cleaned.toLowerCase())){
+      alert("Такая тема уже есть 🙂");
+      return;
+    }
+
+    topics.push(cleaned);
+    saveTopics(topics);
+    topicInput.value = "";
+    onTopicsChanged();
+  }
+
+  // ---------- Buttons ----------
   function spinToDaily(){
     const { idx } = ensureDailyPick();
     animateSpinToIndex(idx);
   }
 
   function shuffleTopics(){
+    // перемешиваем и сбрасываем прогресс
     topics.sort(()=>Math.random() - 0.5);
+    saveTopics(topics);
+    onTopicsChanged();
+  }
+
+  function resetAllProgress(){
     clearProgress();
-    renderList();
     resultText.textContent = "—";
-    angle = 0;
+    // оставляем угол как есть, просто перерисуем
     draw();
   }
 
-  function resetAll(){
-    clearProgress();
-    angle = 0;
-    resultText.textContent = "—";
-    draw();
+  function resetTopicsToDefault(){
+    topics = [...DEFAULT_TOPICS];
+    saveTopics(topics);
+    onTopicsChanged();
   }
 
-  // init
+  // ---------- Init ----------
   renderList();
-
   const { idx: initIdx } = ensureDailyPick();
-  // Сразу ставим колесо на тему дня (без анимации) и синхронизируем текст
   angle = angleForIndex(initIdx);
   draw();
-  resultText.textContent = topics[indexFromAngle(angle)];
+  resultText.textContent = topics[indexFromAngle(angle)] ?? "—";
 
-  // events
   spinBtn.addEventListener("click", spinToDaily);
-
-  rerollBtn.addEventListener("click", () => {
-    const idx = rerollToday();
-    animateSpinToIndex(idx);
-  });
-
+  rerollBtn.addEventListener("click", () => animateSpinToIndex(rerollToday()));
   shuffleBtn.addEventListener("click", shuffleTopics);
-  resetBtn.addEventListener("click", resetAll);
+  resetBtn.addEventListener("click", resetAllProgress);
+
+  addTopicBtn.addEventListener("click", addTopicFromInput);
+  topicInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") addTopicFromInput();
+  });
+  resetTopicsBtn.addEventListener("click", resetTopicsToDefault);
 })();
 </script>
 </body>
