@@ -273,6 +273,47 @@
       line-height: 1.35;
     }
 
+    /* ✅ переключатель наборов */
+    .presetBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .presetTitle{
+      font-size:13px;
+      color:rgba(255,255,255,.75);
+      line-height:1.2;
+    }
+    .seg{
+      display:flex;
+      padding:3px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      gap:3px;
+    }
+    .segBtn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:0;
+      background: transparent;
+      color: rgba(255,255,255,.78);
+      font-weight:700;
+      box-shadow:none;
+      cursor:pointer;
+      transition: background .12s ease, color .12s ease, opacity .12s ease;
+    }
+    .segBtn.active{
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color:#fff;
+      box-shadow: 0 10px 24px rgba(124,92,255,.22);
+    }
+
     /* ---------- RESPONSIVE ---------- */
     @media (max-width: 860px){
       :root{ --pad: 18px; }
@@ -298,6 +339,8 @@
       .list{ max-height: 220px; }
       .centerLogo{ width: 84px; height: 84px; }
       .editorRow{ grid-template-columns: 1fr; }
+      .presetBar{ flex-direction:column; align-items:stretch; }
+      .seg{ justify-content:center; }
     }
   </style>
 </head>
@@ -340,18 +383,32 @@
 
     <div class="card">
       <h2 style="margin:0 0 6px; font-size:18px;">Темы</h2>
-      <div class="meta">Добавляй свои темы — они сохраняются в браузере и сразу появляются на колесе.</div>
+      <div class="meta">Добавляй свои темы — они сохраняются отдельно для каждого набора.</div>
 
       <div class="editor">
+
+        <!-- ✅ Переключатель наборов -->
+        <div class="presetBar">
+          <div class="presetTitle">
+            Набор тем
+          </div>
+          <div class="seg" role="tablist" aria-label="Набор тем">
+            <button id="presetBaseBtn" class="segBtn" type="button">Базовые</button>
+            <button id="presetThemeBtn" class="segBtn" type="button">Тематические</button>
+          </div>
+        </div>
+
         <div class="editorRow">
           <input id="topicInput" type="text" placeholder="Например: Экран регистрации / Экран тарифов / Экран расписания" maxlength="60" />
           <button id="addTopicBtn">Добавить тему</button>
         </div>
+
         <div class="controls" style="margin-top:0">
-          <button id="resetTopicsBtn" class="secondary">Вернуть темы по умолчанию</button>
+          <button id="resetTopicsBtn" class="secondary">Сбросить темы текущего набора</button>
         </div>
+
         <div class="editorNote">
-          • Ограничение: до 60 символов. <br>
+          • Темы и правки сохраняются отдельно для «Базовые» и «Тематические».<br>
           • Чтобы удалить тему — нажми ✕ в списке.
         </div>
       </div>
@@ -362,7 +419,7 @@
 
 <script>
 (() => {
-  // ---------- Defaults ----------
+  // ---------- Presets ----------
   const DEFAULT_TOPICS = [
     "Онбординг (1 экран)",
     "Экран авторизации",
@@ -396,6 +453,69 @@
     "Goodbye экран"
   ];
 
+  // Тематический микс (то, что я прислал: fashion + пиццерия + финтех + беттинг + edu)
+  const THEMATIC_TOPICS = [
+    // 🛍 fashion
+    "Fashion: Каталог одежды (фильтры по размеру/цвету)",
+    "Fashion: Карточка товара (одежда)",
+    "Fashion: Выбор размера и посадки",
+    "Fashion: Таблица размеров",
+    "Fashion: Lookbook / подбор образов",
+    "Fashion: Корзина (одежда)",
+    "Fashion: Чек-аут с доставкой",
+    "Fashion: Возврат товара",
+    "Fashion: Уведомление о наличии размера",
+
+    // 🍕 пиццерия
+    "Pizza: Главный экран",
+    "Pizza: Каталог пицц",
+    "Pizza: Карточка пиццы",
+    "Pizza: Кастомизация пиццы",
+    "Pizza: Добавки и соусы",
+    "Pizza: Корзина доставки",
+    "Pizza: Адрес доставки",
+    "Pizza: Оплата",
+    "Pizza: Статус заказа (готовится/в пути)",
+
+    // 🏦 финтех
+    "Fintech: Главный экран кошелька",
+    "Fintech: История операций",
+    "Fintech: Перевод средств",
+    "Fintech: Подтверждение операции",
+    "Fintech: Ошибка платежа",
+    "Fintech: Добавление карты",
+    "Fintech: Лимиты и безопасность",
+    "Fintech: Аналитика расходов",
+    "Fintech: Уведомления о списаниях",
+
+    // 🎓 edu
+    "Edu: Карточка курса",
+    "Edu: Онбординг ученика",
+    "Edu: Экран урока",
+    "Edu: Домашнее задание",
+    "Edu: Прогресс обучения",
+    "Edu: Расписание занятий",
+    "Edu: Чат с преподавателем",
+    "Edu: Сертификат",
+    "Edu: Оплата курса",
+
+    // 🎰 беттинг
+    "Betting: Линия событий",
+    "Betting: Карточка матча",
+    "Betting: Купон ставок",
+    "Betting: Подтверждение ставки",
+    "Betting: Баланс пользователя",
+    "Betting: Пополнение счета",
+    "Betting: Вывод средств",
+    "Betting: Live-ставки",
+    "Betting: Ответственная игра (лимиты)"
+  ];
+
+  const PRESETS = {
+    base: DEFAULT_TOPICS,
+    thematic: THEMATIC_TOPICS
+  };
+
   const COLORS = [
     "#FF4D4D","#FF8A00","#FFD84D","#B6FF4D","#4DFF88",
     "#4DFFD8","#4DD2FF","#4D7DFF","#7C5CFF","#B84DFF",
@@ -403,8 +523,9 @@
   ];
 
   // ---------- Storage keys ----------
-  const TOPICS_KEY  = "uxui_topics_v1";
-  const STATE_KEY   = "uxui_wheel_daily_v3"; // новая версия состояния (чтобы обновления не ломали старое)
+  const PRESET_KEY  = "uxui_preset_mode_v1";               // base | thematic
+  const TOPICS_KEY  = (mode) => `uxui_topics_v1_${mode}`;  // отдельные темы для каждого режима
+  const STATE_KEY   = (mode) => `uxui_wheel_daily_v4_${mode}`;
 
   // ---------- DOM ----------
   const canvas = document.getElementById("wheel");
@@ -422,14 +543,18 @@
   const addTopicBtn = document.getElementById("addTopicBtn");
   const resetTopicsBtn = document.getElementById("resetTopicsBtn");
 
+  const presetBaseBtn = document.getElementById("presetBaseBtn");
+  const presetThemeBtn = document.getElementById("presetThemeBtn");
+
   // ---------- Geometry ----------
   const W = canvas.width, H = canvas.height;
   const cx = W/2, cy = H/2;
   const radius = Math.min(W,H)/2 - 18;
-
   const TWO_PI = Math.PI * 2;
 
-  let topics = loadTopics();  // <— из localStorage или default
+  // ---------- State ----------
+  let mode = loadPresetMode();           // base | thematic
+  let topics = loadTopics(mode);
   let angle = 0;
   let isSpinning = false;
 
@@ -448,29 +573,47 @@
     return `${y}-${m}-${day}`;
   }
 
-  function loadTopics(){
+  function loadPresetMode(){
+    const saved = localStorage.getItem(PRESET_KEY);
+    return (saved === "thematic" || saved === "base") ? saved : "base";
+  }
+
+  function setPresetMode(next){
+    mode = next;
+    localStorage.setItem(PRESET_KEY, mode);
+    topics = loadTopics(mode);
+    syncPresetUI();
+    onTopicsChanged(true); // true = поменяли набор
+  }
+
+  function syncPresetUI(){
+    presetBaseBtn.classList.toggle("active", mode === "base");
+    presetThemeBtn.classList.toggle("active", mode === "thematic");
+  }
+
+  function loadTopics(currMode){
     try{
-      const raw = localStorage.getItem(TOPICS_KEY);
-      if(!raw) return [...DEFAULT_TOPICS];
+      const raw = localStorage.getItem(TOPICS_KEY(currMode));
+      if(!raw) return [...PRESETS[currMode]];
       const parsed = JSON.parse(raw);
-      if(!Array.isArray(parsed) || parsed.length < 2) return [...DEFAULT_TOPICS];
+      if(!Array.isArray(parsed) || parsed.length < 2) return [...PRESETS[currMode]];
       return parsed.map(s => String(s).trim()).filter(Boolean);
     }catch(e){
-      return [...DEFAULT_TOPICS];
+      return [...PRESETS[currMode]];
     }
   }
 
   function saveTopics(list){
-    localStorage.setItem(TOPICS_KEY, JSON.stringify(list));
+    localStorage.setItem(TOPICS_KEY(mode), JSON.stringify(list));
   }
 
   function clearProgress(){
-    localStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(STATE_KEY(mode));
   }
 
   function loadState(){
     try{
-      const raw = localStorage.getItem(STATE_KEY);
+      const raw = localStorage.getItem(STATE_KEY(mode));
       return raw ? JSON.parse(raw) : null;
     }catch(e){
       return null;
@@ -478,7 +621,11 @@
   }
 
   function saveState(state){
-    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    localStorage.setItem(STATE_KEY(mode), JSON.stringify(state));
+  }
+
+  function hashTopics(list){
+    return list.join("||");
   }
 
   function newCycleState(){
@@ -489,11 +636,6 @@
       todayIndex: null,
       topicsHash: hashTopics(topics)
     };
-  }
-
-  function hashTopics(list){
-    // лёгкий “хэш” для проверки изменений списка
-    return list.join("||");
   }
 
   function pickFromRemaining(state){
@@ -511,13 +653,11 @@
     const tKey = todayKey();
     let state = loadState();
 
-    // если темы изменились — сброс цикла
     const currentHash = hashTopics(topics);
     if(!state || state.topicsHash !== currentHash){
       state = newCycleState();
     }
 
-    // если на сегодня уже есть тема и индекс валиден
     if(state.lastDate === tKey && Number.isInteger(state.todayIndex) && state.todayIndex >= 0 && state.todayIndex < topics.length){
       return { idx: state.todayIndex, state };
     }
@@ -595,7 +735,7 @@
       ctx.lineJoin="round";
 
       const label = topics[i] ?? "";
-      const short = label.length > 34 ? (label.slice(0, 33) + "…") : label;
+      const short = label.length > 36 ? (label.slice(0, 35) + "…") : label;
       const parts = splitToTwoLines(short, 20);
       const rText = radius - 42;
 
@@ -643,6 +783,8 @@
     resetBtn.disabled = !enabled;
     addTopicBtn.disabled = !enabled;
     resetTopicsBtn.disabled = !enabled;
+    presetBaseBtn.disabled = !enabled;
+    presetThemeBtn.disabled = !enabled;
   }
 
   function animateSpinToIndex(targetIdx){
@@ -651,7 +793,6 @@
     isSpinning = true;
     setButtonsEnabled(false);
 
-    // ✅ не показываем тему раньше окончания вращения
     resultText.textContent = "Крутится…";
 
     const base = angleForIndex(targetIdx);
@@ -678,11 +819,9 @@
         return;
       }
 
-      // ✅ финал: фиксируем ровно в сектор
       angle = base;
       draw();
 
-      // ✅ синхронизация текста с фактическим сектором
       const actualIdx = indexFromAngle(angle);
       resultText.textContent = topics[actualIdx] ?? "—";
 
@@ -717,14 +856,13 @@
       del.textContent = "✕";
       del.title = "Удалить тему";
       del.addEventListener("click", () => {
-        // не даём удалить до 2 тем (иначе колесо бессмысленно)
         if(topics.length <= 2){
           alert("Нужно минимум 2 темы 🙂");
           return;
         }
         topics.splice(i,1);
         saveTopics(topics);
-        onTopicsChanged();
+        onTopicsChanged(false);
       });
 
       actions.appendChild(del);
@@ -736,10 +874,16 @@
     });
   }
 
-  function onTopicsChanged(){
-    // при изменении списка тем сбрасываем прогресс, чтобы не было несостыковок индексов
+  function onTopicsChanged(switchedPreset){
+    // при изменении списка тем сбрасываем прогресс (индексы/remaining)
     clearProgress();
     renderList();
+
+    // если переключили набор — покажем аккуратно, что теперь другой список
+    if(switchedPreset){
+      resultText.textContent = "—";
+    }
+
     // ставим колесо на тему дня нового списка
     const { idx } = ensureDailyPick();
     angle = angleForIndex(idx);
@@ -751,10 +895,8 @@
     const raw = (topicInput.value || "").trim();
     if(!raw) return;
 
-    // убираем двойные пробелы
     const cleaned = raw.replace(/\s+/g, " ");
 
-    // не добавляем дубликаты
     if(topics.some(t => t.toLowerCase() === cleaned.toLowerCase())){
       alert("Такая тема уже есть 🙂");
       return;
@@ -763,7 +905,7 @@
     topics.push(cleaned);
     saveTopics(topics);
     topicInput.value = "";
-    onTopicsChanged();
+    onTopicsChanged(false);
   }
 
   // ---------- Buttons ----------
@@ -773,42 +915,48 @@
   }
 
   function shuffleTopics(){
-    // перемешиваем и сбрасываем прогресс
     topics.sort(()=>Math.random() - 0.5);
     saveTopics(topics);
-    onTopicsChanged();
+    onTopicsChanged(false);
   }
 
   function resetAllProgress(){
     clearProgress();
     resultText.textContent = "—";
-    // оставляем угол как есть, просто перерисуем
     draw();
   }
 
-  function resetTopicsToDefault(){
-    topics = [...DEFAULT_TOPICS];
+  function resetTopicsCurrentPreset(){
+    topics = [...PRESETS[mode]];
     saveTopics(topics);
-    onTopicsChanged();
+    onTopicsChanged(false);
   }
 
   // ---------- Init ----------
+  syncPresetUI();
   renderList();
+
   const { idx: initIdx } = ensureDailyPick();
   angle = angleForIndex(initIdx);
   draw();
   resultText.textContent = topics[indexFromAngle(angle)] ?? "—";
 
+  // wheel actions
   spinBtn.addEventListener("click", spinToDaily);
   rerollBtn.addEventListener("click", () => animateSpinToIndex(rerollToday()));
   shuffleBtn.addEventListener("click", shuffleTopics);
   resetBtn.addEventListener("click", resetAllProgress);
 
+  // editor actions
   addTopicBtn.addEventListener("click", addTopicFromInput);
   topicInput.addEventListener("keydown", (e) => {
     if(e.key === "Enter") addTopicFromInput();
   });
-  resetTopicsBtn.addEventListener("click", resetTopicsToDefault);
+  resetTopicsBtn.addEventListener("click", resetTopicsCurrentPreset);
+
+  // preset toggle
+  presetBaseBtn.addEventListener("click", () => setPresetMode("base"));
+  presetThemeBtn.addEventListener("click", () => setPresetMode("thematic"));
 })();
 </script>
 </body>
